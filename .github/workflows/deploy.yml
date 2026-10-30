@@ -1,14 +1,16 @@
 name: Deploy
 
-# Läuft nur, nachdem "Validate" auf main erfolgreich war. Ungültige Daten oder
-# fehlschlagende Tests lassen Validate scheitern – dann wird nichts veröffentlicht.
-# "workflow_dispatch" ist nötig, weil die monatliche Handelsregister-Abfrage
-# Validate per Dispatch anstösst (Pushes mit GITHUB_TOKEN lösen keine Workflows aus).
+# Läuft nach einem Push auf main, sobald "Validate" erfolgreich war. Ungültige Daten
+# oder fehlschlagende Tests lassen Validate scheitern – dann wird nichts veröffentlicht.
+# Die Handelsregister-Abfrage startet Deploy direkt per Dispatch: Läufe, die mit
+# GITHUB_TOKEN angestossen wurden, lösen kein "workflow_run" aus. Darum prüft Deploy
+# in diesem Fall selbst.
 on:
   workflow_run:
     workflows: [Validate]
     types: [completed]
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -22,8 +24,8 @@ concurrency:
 jobs:
   deploy:
     if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -31,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - uses: actions/setup-node@v4
         with:
@@ -39,6 +41,10 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      - name: Prüfen (nur bei Dispatch, sonst hat Validate das schon getan)
+        if: github.event_name == 'workflow_dispatch'
+        run: npm run validate && npm run typecheck && npm test
 
       - name: Build
         run: npm run build
