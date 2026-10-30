@@ -80,9 +80,12 @@ export class Karte {
     const d = (await import('../vorschau/schweiz.json')).default as unknown as Record<string, GeoJSON.GeoJsonObject>;
     const css = getComputedStyle(document.documentElement);
     const farbe = (n: string) => css.getPropertyValue(n).trim();
-    L.geoJSON(d.country, { style: { color: farbe('--rand-stark'), weight: 1.5, fillColor: farbe('--flaeche'), fillOpacity: 1 }, interactive: false }).addTo(this.map).bringToBack();
-    L.geoJSON(d.grenzen, { style: { color: farbe('--rand-stark'), weight: 0.8, dashArray: '3 3' }, interactive: false }).addTo(this.map);
-    L.geoJSON(d.lakes, { style: { color: '#7fb3d5', weight: 0.5, fillColor: '#a9cbe3', fillOpacity: 0.7 }, interactive: false }).addTo(this.map);
+    // Eigene Ebene unter den Firmenpunkten (wie die Kacheln), sonst verdeckt der Umriss die Punkte
+    this.map.createPane('umriss').style.zIndex = '250';
+    const renderer = L.svg({ pane: 'umriss' });
+    L.geoJSON(d.country, { style: { color: farbe('--rand-stark'), weight: 1.5, fillColor: farbe('--flaeche'), fillOpacity: 1 }, interactive: false, pane: 'umriss', renderer } as L.GeoJSONOptions).addTo(this.map);
+    L.geoJSON(d.grenzen, { style: { color: farbe('--rand-stark'), weight: 0.8, dashArray: '3 3' }, interactive: false, pane: 'umriss', renderer } as L.GeoJSONOptions).addTo(this.map);
+    L.geoJSON(d.lakes, { style: { color: '#7fb3d5', weight: 0.5, fillColor: '#a9cbe3', fillOpacity: 0.7 }, interactive: false, pane: 'umriss', renderer } as L.GeoJSONOptions).addTo(this.map);
     this.map.attributionControl.addAttribution('Umrisse © BFS/swisstopo (Vorschau)');
   }
 
