@@ -1,0 +1,72 @@
+{
+  "$kommentar": "Steuert, welche Firmen aus dem Handelsregister als potenzielle Kunden gelten. Stichworte sind Wortanfänge (klein geschrieben) und werden in Firmenname und Zweck gesucht. Gewicht 0-100: wie gut passt die Branche zum Sortiment der SC-T. Änderungen wirken ab der nächsten Abfrage.",
+  "minPassung": 35,
+  "kantone": [],
+  "branchen": [
+    {
+      "id": "platten",
+      "name": "Plattenleger & Keramik",
+      "farbe": "#2563eb",
+      "gewicht": 95,
+      "stichworte": ["plattenleg", "plattenbel", "plattenarbeit", "platten ", "keramik", "fliesen", "mosaik", "carrelage", "carreleur", "piastrell"]
+    },
+    {
+      "id": "naturstein",
+      "name": "Naturstein & Steinmetz",
+      "farbe": "#7c3aed",
+      "gewicht": 95,
+      "stichworte": ["naturstein", "steinmetz", "steinhauer", "steinbearbeit", "steinbildhau", "bildhauer", "granit", "marmor", "kunststein", "grabmal", "grabstein", "pierre naturelle", "tailleur de pierre", "marbr", "pietra", "scalpellin"]
+    },
+    {
+      "id": "garten",
+      "name": "Garten- & Landschaftsbau",
+      "farbe": "#16a34a",
+      "gewicht": 85,
+      "stichworte": ["gartenbau", "landschaftsbau", "landschaftsarchitekt", "gartengestalt", "gartenunterhalt", "umgebungsarbeit", "pfläster", "pflaster", "natursteinmauer", "paysagis", "jardin", "giardin"]
+    },
+    {
+      "id": "beton",
+      "name": "Betonbohren & -schneiden",
+      "farbe": "#dc2626",
+      "gewicht": 100,
+      "stichworte": ["betonbohr", "betonschneid", "betontrenn", "betonfräs", "kernbohr", "bohr- und schneid", "seilsäg", "wandsäg", "fugenschneid", "rückbau", "abbruch", "demontage", "carottage", "sciage", "démolition", "demolizion"]
+    },
+    {
+      "id": "bau",
+      "name": "Bauunternehmen & Maurer",
+      "farbe": "#ea580c",
+      "gewicht": 70,
+      "stichworte": ["bauunternehm", "baugeschäft", "hochbau", "tiefbau", "maurer", "umbau", "renovation", "sanierung", "baumeister", "gipser", "fassaden", "entreprise de construction", "maçonn", "impresa di costruzion", "costruzion"]
+    },
+    {
+      "id": "boden",
+      "name": "Boden & Unterlagsboden",
+      "farbe": "#0891b2",
+      "gewicht": 80,
+      "stichworte": ["unterlagsbod", "estrich", "bodenbel", "bodenleg", "bodenschleif", "industrieboden", "terrazzo", "parkett", "chape", "revêtement de sol"]
+    },
+    {
+      "id": "ofen",
+      "name": "Ofen- & Cheminéebau",
+      "farbe": "#b45309",
+      "gewicht": 60,
+      "stichworte": ["ofenbau", "cheminée", "cheminee", "kaminbau", "hafner", "poêl", "camini"]
+    },
+    {
+      "id": "haustechnik",
+      "name": "Sanitär & Haustechnik",
+      "farbe": "#64748b",
+      "gewicht": 45,
+      "stichworte": ["sanitär", "sanitaer", "haustechnik", "heizungs", "spengler", "lüftung", "sanitaire", "chauffage"]
+    },
+    {
+      "id": "handel",
+      "name": "Baumaschinen & Vermietung",
+      "farbe": "#db2777",
+      "gewicht": 55,
+      "stichworte": ["baumaschin", "mietpark", "maschinenvermiet", "werkzeugvermiet", "baugeräte", "werkzeughandel", "location de machines", "noleggio"]
+    }
+  ],
+  "ausschluss": ["immobilien", "treuhand", "beteiligung", "holding", "software", "informatik", "versicherung", "vermögensverwaltung", "gastronomie", "coiffeur"],
+  "zefixNamensuche": ["Platten", "Keramik", "Naturstein", "Steinmetz", "Gartenbau", "Garten", "Pflästerei", "Betonbohr", "Bohr", "Fräs", "Rückbau", "Abbruch", "Bauunternehmung", "Bau AG", "Bau GmbH", "Maurer", "Unterlagsboden", "Ofenbau", "Cheminée", "Granit", "Marmor", "Carrelage", "Paysagiste"]
+}

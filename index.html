@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="de-CH">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="SC-T Aussendienst: potenzielle Kunden aus dem Handelsregister auf der Karte, Wochenplanung und Routen." />
+    <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <!-- Kacheln und Daten so früh wie möglich anfragen -->
+    <link rel="preconnect" href="https://wmts.geo.admin.ch" crossorigin />
+    <link rel="preload" href="./data/firmen.json" as="fetch" crossorigin />
+    <title>SC-T Aussendienst</title>
+  </head>
+  <body>
+    <div id="app">
+      <noscript>Die Aussendienst-App braucht JavaScript.</noscript>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

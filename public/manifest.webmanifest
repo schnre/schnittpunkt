@@ -1,0 +1,12 @@
+{
+  "name": "SC-T Aussendienst",
+  "short_name": "SC-T Aussendienst",
+  "description": "Potenzielle Kunden aus dem Handelsregister auf der Karte, Wochenplanung und Routen.",
+  "lang": "de-CH",
+  "start_url": "./#/karte",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f5f7",
+  "theme_color": "#111827",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

@@ -1,0 +1,46 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Firmendaten prüfen
+        run: npm run validate
+
+      - name: Typprüfung
+        run: npm run typecheck
+
+      - name: Tests (Planung, Routen, Handelsregister-Auswertung)
+        run: npm test
+
+      - name: Build
+        run: npx vite build
+
+      - name: Build-Artefakt hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7

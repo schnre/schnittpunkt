@@ -1,0 +1,71 @@
+name: Handelsregister
+
+# Monatliche Abfrage neuer potenzieller Kunden (SHAB-Neueintragungen + Zefix).
+# Läuft am 1. jedes Monats um 04:00 UTC (05:00 bzw. 06:00 Schweizer Zeit),
+# lässt sich aber jederzeit von Hand starten: auf GitHub unter Actions → Handelsregister
+# → "Run workflow", oder in der App unter Register → "Jetzt neue Firmen abfragen".
+on:
+  schedule:
+    - cron: '0 4 1 * *'
+  workflow_dispatch:
+    inputs:
+      modus:
+        description: 'monat = Neueintragungen seit letzter Abfrage, bestand = bestehende Firmen per Zefix-Namensuche'
+        type: choice
+        options: [monat, bestand]
+        default: monat
+      max:
+        description: 'Bestand: höchstens so viele Firmendetails abrufen'
+        default: '2500'
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: handelsregister
+  cancel-in-progress: false
+
+jobs:
+  abfrage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Die Abfrage braucht nur Node selbst, keine npm-Pakete.
+      - name: Handelsregister abfragen
+        env:
+          TEL_SEARCH_KEY: ${{ secrets.TEL_SEARCH_KEY }}
+        run: node scripts/handelsregister.mjs --modus=${{ inputs.modus || 'monat' }} --max=${{ inputs.max || '2500' }}
+
+      - name: Ergebnis prüfen
+        run: node scripts/validate-daten.mjs
+
+      - name: Änderungen speichern
+        id: commit
+        run: |
+          if git diff --quiet -- public/data/firmen.json; then
+            echo "Keine Änderungen."
+            echo "geaendert=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          NEU=$(node -e "const d=require('./public/data/firmen.json');console.log(d.laeufe.at(-1).neu)")
+          git add public/data/firmen.json
+          git commit -m "Handelsregister $(date +%Y-%m-%d): ${NEU} neue Firmen"
+          git push
+          echo "geaendert=true" >> "$GITHUB_OUTPUT"
+
+      # Pushes mit GITHUB_TOKEN starten keine weiteren Workflows. Darum Validate
+      # ausdrücklich anstossen; danach veröffentlicht Deploy die neuen Daten.
+      - name: Veröffentlichen anstossen
+        if: steps.commit.outputs.geaendert == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run validate.yml --ref "${GITHUB_REF_NAME}"
