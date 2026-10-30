@@ -33,7 +33,7 @@ const MODUS = args.modus ?? 'monat';
 const MAX = Number(args.max ?? 2500);
 const PARALLEL = 4;
 const HEUTE = new Date().toISOString().slice(0, 10);
-const UA = 'SC-T-Aussendienst/1.0 (Handelsregister-Abgleich, monatlich)';
+const UA = 'Schnittpunkt/1.0 (Handelsregister-Abgleich, monatlich)';
 
 // ---------------------------------------------------------------------------
 // HTTP mit Wiederholung und Drosselung

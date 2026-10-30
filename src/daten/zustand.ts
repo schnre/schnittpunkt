@@ -2,7 +2,7 @@
 // Jeder Zugriff ist abgesichert; ohne Speicher läuft die App im Arbeitsspeicher weiter.
 import type { AppZustand, Crm, Einstellungen, Tag } from '../typen';
 
-const SCHLUESSEL = 'sct-aussendienst:v1';
+const SCHLUESSEL = 'schnittpunkt:v1';
 
 /** Firmensitz SC-Technologie AG, Zürcherstrasse 378, 8500 Frauenfeld */
 export const SCT_SITZ = { adresse: 'Zürcherstrasse 378, 8500 Frauenfeld', lat: 47.55108, lon: 8.87879 };

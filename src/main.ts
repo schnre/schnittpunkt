@@ -22,9 +22,9 @@ const navLinks = NAV.map((n) =>
   h('a', { class: 'nav-link', href: `#/${n.route}`, 'data-route': n.route },
     icon(n.icon), h('span', {}, n.name), n.route === 'register' ? neuBadge : null));
 
-const marke = h('a', { class: 'marke', href: '#/karte', 'aria-label': 'SC-T Aussendienst' },
+const marke = h('a', { class: 'marke', href: '#/karte', 'aria-label': 'Schnittpunkt' },
   h('span', { class: 'marke-logo', 'aria-hidden': 'true', html: '<svg viewBox="0 0 24 24"><rect x="9.5" y="4" width="5" height="16" rx="1" fill="#fff"/><rect x="4" y="9.5" width="16" height="5" rx="1" fill="#fff"/></svg>' }),
-  h('span', { class: 'marke-text' }, 'SC-T'));
+  h('span', { class: 'marke-text' }, 'Schnittpunkt'));
 
 const nav = h('nav', { class: 'app-nav', 'aria-label': 'Hauptnavigation' }, marke, h('div', { class: 'nav-links' }, navLinks));
 const inhalt = h('main', { id: 'inhalt', class: 'app-inhalt', tabindex: -1 });
@@ -66,7 +66,7 @@ async function route() {
     inhalt.dataset.ansicht = name;
     aktuell = ansicht;
   }
-  document.title = `${ansicht.titel} · SC-T Aussendienst`;
+  document.title = `${ansicht.titel} · Schnittpunkt`;
   ansicht.anzeigen(params);
 }
 

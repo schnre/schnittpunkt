@@ -2,7 +2,7 @@
 // - Seiten und Firmendaten: zuerst Netzwerk (Updates kommen sofort an), sonst Cache.
 // - App-Dateien haben Hash-Namen von Vite und ändern sich nie: zuerst Cache.
 // - Kartenkacheln von swisstopo: Cache mit Obergrenze, damit besuchte Gebiete offline sichtbar bleiben.
-const CACHE = 'sct-aussendienst-v1';
+const CACHE = 'schnittpunkt-v1';
 const KACHELN = 'sct-kacheln-v1';
 const MAX_KACHELN = 1500;
 

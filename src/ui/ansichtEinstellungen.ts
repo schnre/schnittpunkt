@@ -68,7 +68,7 @@ export function einstellungenAnsicht(): Ansicht {
     const dauer = h('input', { type: 'number', class: 'feld-input', min: 10, max: 240, step: 5, value: e.besuchsdauer });
     dauer.addEventListener('change', () => setze((x) => { x.besuchsdauer = Math.max(10, Number(dauer.value) || 45); }));
 
-    const repo = h('input', { class: 'feld-input', value: e.github.repo, placeholder: 'benutzer/sct-aussendienst' });
+    const repo = h('input', { class: 'feld-input', value: e.github.repo, placeholder: 'benutzer/schnittpunkt' });
     const token = h('input', { class: 'feld-input', type: 'password', value: e.github.token, placeholder: 'github_pat_…', autocomplete: 'off' });
     const ghSpeichern = () => setze((x) => { x.github = { repo: repo.value.trim().replace(/^https:\/\/github.com\//, ''), token: token.value.trim() }; });
     repo.addEventListener('change', ghSpeichern);
@@ -128,7 +128,7 @@ export function einstellungenAnsicht(): Ansicht {
             class: 'knopf',
             onClick: () => {
               const z = { ...zustand(), einstellungen: { ...zustand().einstellungen, github: { repo: zustand().einstellungen.github.repo, token: '' } } };
-              const a = h('a', { href: URL.createObjectURL(new Blob([JSON.stringify(z, null, 1)], { type: 'application/json' })), download: `sct-aussendienst-${new Date().toISOString().slice(0, 10)}.json` });
+              const a = h('a', { href: URL.createObjectURL(new Blob([JSON.stringify(z, null, 1)], { type: 'application/json' })), download: `schnittpunkt-${new Date().toISOString().slice(0, 10)}.json` });
               a.click();
             },
           }, icon('herunterladen'), 'Exportieren'),

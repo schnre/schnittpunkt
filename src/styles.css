@@ -1,5 +1,5 @@
 /* =========================================================
-   SC-T Aussendienst – Design-System
+   Schnittpunkt – Design-System
    Ruhig, kontrastreich, dicht genug für viel Information.
    ========================================================= */
 
@@ -114,7 +114,7 @@ p { margin: 0; }
   box-shadow: 0 6px 18px -6px rgb(227 6 19 / 0.7);
 }
 .marke-logo svg { width: 26px; height: 26px; }
-.marke-text { font-size: 12px; font-weight: 800; letter-spacing: 0.04em; color: #fff; }
+.marke-text { font-size: 10.5px; font-weight: 750; letter-spacing: 0.02em; color: #fff; }
 .nav-links { display: flex; flex-direction: column; gap: 4px; width: 100%; }
 .nav-link {
   position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px;

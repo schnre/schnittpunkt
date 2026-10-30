@@ -1,4 +1,6 @@
-# SC-T Aussendienst
+# Schnittpunkt
+
+*Wo Route und neue Kunden sich treffen.*
 
 Web-App für den Aussendienst der [SC-Technologie AG](https://www.sc-t.ch) (Frauenfeld). Sie findet im Handelsregister Firmen, die zum Sortiment passen (Steintrennmaschinen, Diamantwerkzeuge, Bohrsysteme, Baukreissägen, Staubsauger, Bodenbearbeitung …), zeigt sie auf einer Schweizer Karte und plant die Besuchswoche mit Routenvorschlag und Übergabe an Google Maps.
 

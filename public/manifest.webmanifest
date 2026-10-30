@@ -1,6 +1,6 @@
 {
-  "name": "SC-T Aussendienst",
-  "short_name": "SC-T Aussendienst",
+  "name": "Schnittpunkt",
+  "short_name": "Schnittpunkt",
   "description": "Potenzielle Kunden aus dem Handelsregister auf der Karte, Wochenplanung und Routen.",
   "lang": "de-CH",
   "start_url": "./#/karte",
