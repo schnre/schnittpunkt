@@ -2,7 +2,8 @@
 // Handelsregister-Abfrage: findet potenzielle Kunden und schreibt public/data/firmen.json.
 //
 //   node scripts/handelsregister.mjs --modus=monat            Neueintragungen seit der letzten Abfrage
-//                                                             (beim ersten Mal: Vormonat)
+//                                                             (beim ersten Mal: Vormonat und zusätzlich
+//                                                             der ganze Bestand, siehe --modus=bestand)
 //   node scripts/handelsregister.mjs --modus=monat --von=2026-09-01 --bis=2026-09-30
 //   node scripts/handelsregister.mjs --modus=bestand [--max=2000]
 //                                                             bestehende Firmen über die Zefix-Namensuche
@@ -188,14 +189,17 @@ async function firmaAufbereiten(detail, quelle) {
 async function shabListe(subRubrik, von, bis) {
   const alle = [];
   for (let seite = 0; ; seite++) {
+    // Kein "rubrics" mitschicken: zusammen mit "rubrics=HR" ignoriert das Portal
+    // "subRubrics" und liefert alle HR-Publikationen.
     const url = shabListeUrl({
-      publicationStates: 'PUBLISHED', rubrics: 'HR', subRubrics: subRubrik,
+      publicationStates: 'PUBLISHED', subRubrics: subRubrik,
       'publicationDate.start': von, 'publicationDate.end': bis,
       'pageRequest.size': 100, 'pageRequest.page': seite,
     });
     const d = await hole(url);
-    // Schutz gegen still ignorierte Filter: ein Monat hat nie 50 000 Einträge in einer Subrubrik
-    if (typeof d.total === 'number' && d.total > 50_000) throw new Error(`Filter wirkungslos? total=${d.total}`);
+    // Schutz gegen still ignorierte Filter: jede Publikation muss zur Subrubrik passen
+    const fremd = (d.content ?? []).find((c) => c.meta?.subRubric !== subRubrik);
+    if (fremd) throw new Error(`Filter wirkungslos? ${fremd.meta?.subRubric} statt ${subRubrik}, total=${d.total}`);
     alle.push(...(d.content ?? []).map((c) => c.meta));
     if (!d.content?.length || alle.length >= (d.total ?? 0)) break;
   }
@@ -304,8 +308,17 @@ async function bestand(daten) {
 async function main() {
   const daten = await datenLaden();
   await rechtsformenLaden();
-  const lauf = MODUS === 'bestand' ? await bestand(daten) : await monat(daten);
-  if (!lauf) return;
+  // Erste Abfrage: neben den Neueintragungen auch den ganzen passenden Bestand laden.
+  // Monat zuerst, damit frisch eingetragene Firmen als "neu" markiert bleiben.
+  const ersteAbfrage = !daten.laeufe.some((l) => l.modus === 'bestand');
+  const modi = MODUS === 'bestand' ? ['bestand'] : ersteAbfrage ? ['monat', 'bestand'] : ['monat'];
+  if (modi.length > 1) console.log('Erste Abfrage: Neueintragungen und bestehende Firmen.');
+  const laeufe = [];
+  for (const m of modi) {
+    const lauf = m === 'bestand' ? await bestand(daten) : await monat(daten);
+    if (lauf) laeufe.push(lauf);
+  }
+  if (!laeufe.length) return;
 
   // Aufräumen: Duplikate, sortieren, entfernte Felder
   const nachId = new Map();
@@ -316,11 +329,16 @@ async function main() {
   daten.firmen = [...nachId.values()].sort((a, b) => a.name.localeCompare(b.name, 'de'));
   daten.stand = new Date().toISOString();
   daten.demo = false;
-  daten.laeufe.push({ datum: HEUTE, ...lauf, gesamt: daten.firmen.filter((f) => !f.geloescht).length });
+  const gesamt = daten.firmen.filter((f) => !f.geloescht).length;
+  for (const lauf of laeufe) daten.laeufe.push({ datum: HEUTE, ...lauf, gesamt });
   daten.laeufe = daten.laeufe.slice(-36);
 
   await writeFile(DATEI, JSON.stringify(daten) + '\n');
-  const zusammenfassung = `### Handelsregister-Abfrage ${HEUTE}\n\n| | |\n|---|---|\n| Modus | ${lauf.modus} |\n| Zeitraum | ${lauf.von ?? '–'} bis ${lauf.bis} |\n| Geprüft | ${lauf.geprueft} |\n| **Neue potenzielle Kunden** | **${lauf.neu}** |\n| Gelöscht markiert | ${lauf.geloescht} |\n| Firmen total | ${daten.laeufe.at(-1).gesamt} |\n`;
+  let zusammenfassung = `### Handelsregister-Abfrage ${HEUTE}\n`;
+  for (const lauf of laeufe) {
+    zusammenfassung += `\n| | |\n|---|---|\n| Modus | ${lauf.modus} |\n| Zeitraum | ${lauf.von ?? '–'} bis ${lauf.bis} |\n| Geprüft | ${lauf.geprueft} |\n| **Neue potenzielle Kunden** | **${lauf.neu}** |\n| Gelöscht markiert | ${lauf.geloescht} |\n`;
+  }
+  zusammenfassung += `\nFirmen total: **${gesamt}**\n`;
   console.log(zusammenfassung);
   if (process.env.GITHUB_STEP_SUMMARY) await writeFile(process.env.GITHUB_STEP_SUMMARY, zusammenfassung, { flag: 'a' });
 }

@@ -34,6 +34,7 @@ export function registerAnsicht(): Ansicht {
     const d = dateiInfo();
     const laeufe = [...(d?.laeufe ?? [])].reverse();
     const letzter: Lauf | undefined = laeufe[0];
+    const letzterMonat: Lauf | undefined = laeufe.find((l) => l.modus === 'monat');
     const neue = alleFirmen().filter((f) => f.neu).sort((a, b) => b.passung - a.passung);
     const { repo, token } = zustand().einstellungen.github;
 
@@ -68,13 +69,12 @@ export function registerAnsicht(): Ansicht {
 
       d?.demo ? h('div', { class: 'hinweis-box' }, icon('info'),
         h('div', {}, h('strong', {}, 'Es sind noch Demodaten geladen. '),
-          'Beim ersten Start der Abfrage werden sie durch echte Firmen ersetzt. Für den ersten Bestand einmal „Bestand aufbauen“ ausführen (dauert länger), danach läuft die Monatsabfrage automatisch.',
-          h('div', { class: 'knopf-reihe' }, startKnopf('bestand', 'Bestand aufbauen')))) : '',
+          'Beim ersten Start der Abfrage werden sie durch echte Firmen ersetzt: die Neueintragungen des Vormonats und alle bestehenden Firmen, die zum Suchprofil passen (dauert länger). Danach läuft die Monatsabfrage automatisch.')) : '',
 
       h('div', { class: 'kacheln' },
         h('div', { class: 'kachel' }, h('span', { class: 'kachel-label' }, 'Letzte Abfrage'),
           h('strong', { class: 'kachel-zahl' }, letzter ? lang(letzter.datum) : '–'),
-          h('span', { class: 'leise klein' }, letzter?.von ? `Publikationen ${lang(letzter.von)} bis ${lang(letzter.bis)}` : '')),
+          h('span', { class: 'leise klein' }, letzterMonat?.von ? `Publikationen ${lang(letzterMonat.von)} bis ${lang(letzterMonat.bis)}` : '')),
         h('div', { class: 'kachel akzent' }, h('span', { class: 'kachel-label' }, 'Neu gefunden'),
           h('strong', { class: 'kachel-zahl' }, String(neue.length)),
           h('a', { class: 'klein', href: '#/karte?neu=1' }, 'Auf der Karte zeigen →')),
@@ -86,7 +86,7 @@ export function registerAnsicht(): Ansicht {
           h('span', { class: 'leise klein' }, 'jeweils am 1. des Monats, 05:00'))),
 
       h('section', { class: 'karte-block' },
-        h('h2', {}, `Neu im Handelsregister${letzter?.von ? ` (${monatName(letzter.von)})` : ''}`),
+        h('h2', {}, `Neu im Handelsregister${letzterMonat?.von ? ` (${monatName(letzterMonat.von)})` : ''}`),
         neue.length
           ? h('ul', { class: 'neu-liste' }, neue.map((f) => {
             const br = brancheVon(f.branchen[0]);
