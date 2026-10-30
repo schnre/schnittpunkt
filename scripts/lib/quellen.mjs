@@ -108,7 +108,8 @@ export function zefixZuFirma(d, rechtsformen = {}) {
     ort: a.town || d.legalSeat || undefined,
     kanton: d.shabPub?.[0]?.registryOfficeCanton || undefined,
     zweck: d.purpose ? ohneHtml(d.purpose) : undefined,
-    auszug: d.cantonalExcerptWeb || undefined,
+    // Manche Kantone (z. B. GE) liefern http-Links, leiten aber selbst auf https um
+    auszug: d.cantonalExcerptWeb?.replace(/^http:\/\//i, 'https://') || undefined,
     eintrag: d.shabDate || undefined,
     status: d.status,
     ehraid: d.ehraid,
