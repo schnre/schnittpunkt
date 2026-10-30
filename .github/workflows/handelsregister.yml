@@ -62,10 +62,10 @@ jobs:
           git push
           echo "geaendert=true" >> "$GITHUB_OUTPUT"
 
-      # Pushes mit GITHUB_TOKEN starten keine weiteren Workflows. Darum Validate
-      # ausdrücklich anstossen; danach veröffentlicht Deploy die neuen Daten.
+      # Pushes mit GITHUB_TOKEN starten keine weiteren Workflows, und ein so
+      # angestossenes Validate löst auch Deploy nicht aus. Darum Deploy direkt starten.
       - name: Veröffentlichen anstossen
         if: steps.commit.outputs.geaendert == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run validate.yml --ref "${GITHUB_REF_NAME}"
+        run: gh workflow run deploy.yml --ref "${GITHUB_REF_NAME}"
