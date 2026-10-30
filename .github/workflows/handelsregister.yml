@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       modus:
-        description: 'monat = Neueintragungen seit letzter Abfrage, bestand = bestehende Firmen per Zefix-Namensuche'
+        description: 'monat = Neueintragungen seit letzter Abfrage (beim ersten Mal inkl. Bestand), bestand = bestehende Firmen per Zefix-Namensuche'
         type: choice
         options: [monat, bestand]
         default: monat
@@ -56,7 +56,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          NEU=$(node -e "const d=require('./public/data/firmen.json');console.log(d.laeufe.at(-1).neu)")
+          NEU=$(node -e "const d=require('./public/data/firmen.json');console.log(d.laeufe.filter(l=>l.datum===d.laeufe.at(-1).datum).reduce((s,l)=>s+l.neu,0))")
           git add public/data/firmen.json
           git commit -m "Handelsregister $(date +%Y-%m-%d): ${NEU} neue Firmen"
           git push
