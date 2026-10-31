@@ -1,7 +1,7 @@
 // Verbindet die reine Planungslogik mit Firmendaten und gespeicherten Plänen.
 import { firmaVon } from '../daten/firmen';
 import { plusTage } from '../daten/datum';
-import { tagSetzen, tagVon, zustand } from '../daten/zustand';
+import { crmSetzen, crmVon, tagSetzen, tagVon, zustand } from '../daten/zustand';
 import { zeitZuMin } from '../geo/distanz';
 import type { Mitarbeiter, Stopp } from '../typen';
 import { optimieren, type PlanRahmen, type PunktVon } from './route';
@@ -37,6 +37,34 @@ export function geplantInWoche(montag: string): Map<string, { mitarbeiter: strin
     }
   }
   return erg;
+}
+
+/** Alle geplanten Termine einer Firma über alle Mitarbeiter und Tage. */
+export function termineVon(firmaId: string): { mitarbeiter: string; datum: string; fix?: string }[] {
+  const erg: { mitarbeiter: string; datum: string; fix?: string }[] = [];
+  for (const [mId, tage] of Object.entries(zustand().plaene)) {
+    for (const [d, tag] of Object.entries(tage)) {
+      const s = tag.stopps.find((x) => x.firmaId === firmaId);
+      if (s) erg.push({ mitarbeiter: mId, datum: d, fix: s.fix });
+    }
+  }
+  return erg;
+}
+
+/** Besuch erfassen oder entfernen, mit dem Mitarbeiter, der dort war. */
+export function besuchSetzen(firmaId: string, datum: string, mitarbeiterId: string | undefined, besucht: boolean): void {
+  const crm = crmVon(firmaId);
+  const b = new Set(crm.besuche ?? []);
+  const von = { ...crm.besuchtVon };
+  if (besucht) {
+    b.add(datum);
+    if (mitarbeiterId) von[datum] = mitarbeiterId;
+  } else {
+    b.delete(datum);
+    delete von[datum];
+  }
+  const status = crm.status ?? 'offen';
+  crmSetzen(firmaId, { besuche: [...b], besuchtVon: von, status: besucht && status === 'offen' ? 'kontaktiert' : status });
 }
 
 export function stoppHinzufuegen(mitarbeiterId: string, datum: string, stopp: Stopp, ordnen = true): void {

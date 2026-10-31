@@ -1,8 +1,8 @@
 // Detailkarte einer Firma: Adresse, Kontakt, Status, Notizen, Einplanen.
-import { STATUS, STATUS_LISTE, adresseVon, brancheVon, kontaktVon, letzterBesuch, statusVon } from '../daten/firmen';
+import { STATUS, STATUS_LISTE, adresseVon, brancheVon, kontaktVon, statusVon } from '../daten/firmen';
 import { heute, kurz, lang, montagVon, parse, plusTage, wochentag } from '../daten/datum';
 import { crmSetzen, crmVon, zustand } from '../daten/zustand';
-import { geplantInWoche, mitarbeiterVon, stoppHinzufuegen } from '../planung/aktionen';
+import { besuchSetzen, geplantInWoche, mitarbeiterVon, stoppHinzufuegen, termineVon } from '../planung/aktionen';
 import { navigationLink, ortLink } from '../planung/googleMaps';
 import type { Firma } from '../typen';
 import { h } from './dom';
@@ -118,23 +118,50 @@ export function firmaDetail(f: Firma, opt: DetailOptionen = {}): HTMLElement {
     h('p', { class: 'hinweis-klein' }, 'Uhrzeit nur bei Fixtermin. Freie Besuche werden automatisch passend eingereiht.'),
   );
 
+  // --- Verlauf: erfasste Besuche und geplante Termine, wer wann dort war
+  const mitarbeiterMit = (id: string | undefined) => e.mitarbeiter.find((m) => m.id === id);
+  const verlauf = new Map<string, { datum: string; mitarbeiter?: string; fix?: string; besucht: boolean }>();
+  for (const t of termineVon(f.id)) verlauf.set(`${t.datum}|${t.mitarbeiter}`, { ...t, besucht: false });
+  for (const d of crm.besuche ?? []) {
+    const von = crm.besuchtVon?.[d];
+    // Besuch ohne Mitarbeiter (ältere Einträge): dem geplanten Termin an diesem Tag zuordnen
+    const termin = [...verlauf.values()].find((v) => v.datum === d && (!von || v.mitarbeiter === von));
+    if (termin) termin.besucht = true;
+    else verlauf.set(`${d}|${von ?? ''}`, { datum: d, mitarbeiter: von, besucht: true });
+  }
+  const eintraege = [...verlauf.values()].sort((a, b) => b.datum.localeCompare(a.datum));
+  const besuchZahl = eintraege.filter((v) => v.besucht).length;
+
   // --- Besuche + Notiz
-  const besuche = [...(crm.besuche ?? [])].sort().reverse();
   const notiz = h('textarea', { class: 'notiz', rows: 3, placeholder: 'Notizen zum Gespräch, Bedarf, Maschinenpark …' }, crm.notiz ?? '');
   notiz.addEventListener('change', () => crmSetzen(f.id, { notiz: notiz.value }));
   const besuchBlock = h('section', { class: 'detail-block' },
     h('div', { class: 'block-kopf' },
-      h('h3', { class: 'block-titel' }, 'Besuche & Notizen'),
+      h('h3', { class: 'block-titel' }, 'Verlauf & Notizen'),
       h('button', {
         class: 'knopf klein',
         onClick: () => {
-          const b = new Set(crm.besuche ?? []);
-          b.add(heute());
-          crmSetzen(f.id, { besuche: [...b], status: status === 'offen' ? 'kontaktiert' : status });
-          toast('Besuch von heute erfasst');
+          // Wer heute für diese Firma eingeplant ist, war dort; sonst der aktive Mitarbeiter
+          const wer = termineVon(f.id).find((t) => t.datum === heute())?.mitarbeiter ?? e.aktiverMitarbeiter;
+          besuchSetzen(f.id, heute(), wer, true);
+          toast(`Besuch von heute erfasst (${mitarbeiterVon(wer).name})`);
         },
       }, icon('haken'), 'Heute besucht')),
-    besuche.length ? h('p', { class: 'leise klein' }, `Letzter Besuch: ${lang(letzterBesuch(f.id)!)}${besuche.length > 1 ? ` · ${besuche.length} Besuche` : ''}`) : h('p', { class: 'leise klein' }, 'Noch kein Besuch erfasst'),
+    eintraege.length ? h('ol', { class: 'verlauf' }, eintraege.map((v) => {
+      const m = mitarbeiterMit(v.mitarbeiter);
+      const zukunft = v.datum >= heute();
+      const art = v.besucht ? 'Besucht' : zukunft ? 'Geplant' : 'Geplant, nicht als besucht erfasst';
+      return h('li', { class: `verlauf-eintrag${v.besucht ? ' besucht' : zukunft ? ' geplant' : ' offen'}` },
+        h('span', { class: 'verlauf-punkt', style: `--farbe:${m?.farbe ?? '#94a3b8'}` }, icon(v.besucht ? 'haken' : 'kalender')),
+        h('div', { class: 'verlauf-text' },
+          h('strong', {}, `${wochentag(v.datum)} ${lang(v.datum)}${v.fix ? `, ${v.fix}` : ''}`),
+          h('span', { class: 'leise klein' }, `${m?.name ?? (v.mitarbeiter ? 'Ehemaliger Mitarbeiter' : 'Mitarbeiter nicht erfasst')} · ${art}`)),
+        v.besucht ? h('button', {
+          class: 'icon-knopf klein', title: 'Besuch entfernen', 'aria-label': `Besuch vom ${lang(v.datum)} entfernen`,
+          onClick: () => besuchSetzen(f.id, v.datum, undefined, false),
+        }, icon('kreuz')) : null);
+    })) : null,
+    h('p', { class: 'leise klein' }, besuchZahl ? `${besuchZahl} ${besuchZahl === 1 ? 'Besuch' : 'Besuche'} erfasst` : 'Noch kein Besuch erfasst'),
     notiz,
   );
 

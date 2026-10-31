@@ -314,6 +314,16 @@ p { margin: 0; }
 .detail-block:last-child { border-bottom: 0; }
 .block-titel { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-3); display: flex; align-items: center; gap: 5px; }
 .block-titel .icon { width: 14px; height: 14px; }
+.verlauf { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 260px; overflow-y: auto; }
+.verlauf-eintrag { display: flex; align-items: center; gap: 10px; padding: 5px 2px; }
+.verlauf-punkt {
+  width: 24px; height: 24px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: var(--farbe); color: #fff;
+}
+.verlauf-punkt .icon { width: 13px; height: 13px; }
+.verlauf-eintrag.geplant .verlauf-punkt { background: transparent; color: var(--farbe); box-shadow: inset 0 0 0 2px var(--farbe); }
+.verlauf-eintrag.offen { opacity: 0.6; }
+.verlauf-text { flex: 1; min-width: 0; display: grid; font-size: 13px; }
 .block-kopf { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .adresse { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: start; font-size: 14px; }
 .adresse > .icon { color: var(--akzent); margin-top: 2px; }
@@ -396,6 +406,20 @@ p { margin: 0; }
 .tag-kennzahlen span { display: inline-flex; align-items: center; gap: 5px; }
 .tag-kennzahlen .icon { width: 14px; height: 14px; }
 .tag-aktionen { display: flex; flex-wrap: wrap; gap: 6px; }
+.einplanen { display: grid; gap: 4px; }
+.einplanen-zeile { display: flex; gap: 6px; align-items: center; }
+.einplanen-zeile .suche-wrap { flex: 1; min-width: 0; }
+.einplanen .termin-feld { height: 38px; padding: 0 10px; border-radius: 10px; margin: 0; }
+.einplanen .termin-feld input { font-size: 13px; }
+.such-treffer { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.such-treffer:empty { display: none; }
+.such-treffer > li.leise { padding: 6px 10px; }
+.such-treffer-knopf {
+  width: 100%; display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 9px;
+  border: 1px solid var(--rand); background: var(--flaeche); text-align: left; color: var(--text); font-size: 13px;
+}
+.such-treffer-knopf:hover, .such-treffer-knopf:focus-visible { border-color: var(--akzent); }
+.such-treffer-knopf > .icon { width: 16px; height: 16px; color: var(--text-3); flex: none; }
 
 .zeitachse { list-style: none; margin: 0; padding: 0; display: grid; }
 .zeitachse > li { display: grid; grid-template-columns: 52px 30px 1fr; gap: 0 10px; align-items: start; }

@@ -1,13 +1,13 @@
 // Wochenplanung pro Aussendienst-Mitarbeiter: Tage, Zeitplan, Route, Vorschläge, Google Maps.
-import { STATUS, adresseVon, brancheVon, firmaVon, statusVon } from '../daten/firmen';
+import { STATUS, adresseVon, alleFirmen, brancheVon, firmaVon, statusVon } from '../daten/firmen';
 import { heute, kalenderwoche, kurz, lang, montagVon, plusTage, wochentag } from '../daten/datum';
-import { aendern, beobachten, crmSetzen, crmVon, tagSetzen, tagVon, zustand } from '../daten/zustand';
+import { aendern, beobachten, crmVon, tagSetzen, tagVon, zustand } from '../daten/zustand';
 import { formatDauer, formatKm, minZuZeit } from '../geo/distanz';
-import { geplantInWoche, mitarbeiterVon, punktVon, rahmenFuer, stoppEntfernen, stoppHinzufuegen, tagOptimieren } from '../planung/aktionen';
+import { besuchSetzen, geplantInWoche, mitarbeiterVon, punktVon, rahmenFuer, stoppEntfernen, stoppHinzufuegen, tagOptimieren } from '../planung/aktionen';
 import { routenLinks } from '../planung/googleMaps';
 import { kandidatenBauen } from '../planung/kandidaten';
 import { tagFuellen, vorschlagen, zeitplan, type Vorschlag, type Zeitplan } from '../planung/route';
-import type { Stopp } from '../typen';
+import type { Firma, Stopp } from '../typen';
 import { h, leeren } from './dom';
 import { firmaDetail } from './firmaDetail';
 import { icon } from './icons';
@@ -35,6 +35,21 @@ export function wocheAnsicht(): Ansicht {
     h('input', { type: 'checkbox', onChange: (e: Event) => { nurNeu = (e.target as HTMLInputElement).checked; vorschlaegeZeichnen(); } }),
     h('span', {}, 'Nur neue Firmen'));
 
+  // Firmensuche: gezielt eine Firma (optional mit Termin) in den Tag aufnehmen
+  const sucheFeld = h('input', { class: 'suchfeld', type: 'search', placeholder: 'Firma, Ort oder PLZ …', 'aria-label': 'Firma zum Einplanen suchen', autocomplete: 'off' });
+  const terminFeld = h('input', { type: 'time', class: 'fix-input', 'aria-label': 'Termin (leer = frei planbar)' });
+  const trefferListe = h('ul', { class: 'such-treffer' });
+  sucheFeld.addEventListener('input', () => sucheZeichnen());
+  sucheFeld.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const [erster] = suchTreffer();
+      if (erster) einplanen(erster);
+    } else if (e.key === 'Escape') {
+      sucheFeld.value = '';
+      sucheZeichnen();
+    }
+  });
+
   const kartenEl = h('div', { class: 'karte' });
   const kartenDetail = h('div', { class: 'karten-detail', hidden: true });
 
@@ -49,7 +64,13 @@ export function wocheAnsicht(): Ansicht {
     tageLeiste,
     h('div', { class: 'woche-split' },
       h('section', { class: 'tag-panel' },
-        tagKopf, tagAktionen, zeitachse,
+        tagKopf,
+        h('div', { class: 'einplanen' },
+          h('div', { class: 'einplanen-zeile' },
+            h('div', { class: 'suche-wrap' }, icon('suche'), sucheFeld),
+            h('label', { class: 'mini-feld termin-feld', title: 'Termin (leer = frei planbar)' }, icon('uhr'), terminFeld)),
+          trefferListe),
+        tagAktionen, zeitachse,
         h('div', { class: 'vorschlag-bereich' },
           h('div', { class: 'block-kopf' },
             h('h3', { class: 'block-titel' }, icon('zauber'), ' Vorschläge auf dem Weg'),
@@ -137,14 +158,14 @@ export function wocheAnsicht(): Ansicht {
     tagAktionen.append(
       h('button', { class: 'knopf', disabled: st.length < 2, onClick: () => { tagOptimieren(mitarbeiterId, datum); toast('Route optimiert'); } }, icon('route'), 'Route optimieren'),
       h('button', {
-        class: 'knopf', title: 'Freie Zeit mit den besten Vorschlägen auffüllen',
+        class: 'knopf', title: 'Freie Zeit um die geplanten Besuche herum mit den besten Vorschlägen auffüllen',
         onClick: () => {
           const vorher = st.length;
           const neu = tagFuellen(st, kandidaten(), punktVon, r);
           speichern(neu);
           toast(neu.length > vorher ? `${neu.length - vorher} Besuche ergänzt` : 'Kein weiterer Besuch passt in den Tag');
         },
-      }, icon('zauber'), 'Tag füllen'),
+      }, icon('zauber'), st.length ? 'Auffüllen' : 'Tag füllen'),
       ...links.map((url, i) => h('a', { class: 'knopf primaer', href: url, target: '_blank', rel: 'noopener' },
         icon('navi'), links.length > 1 ? `Google Maps ${i + 1}/${links.length}` : 'In Google Maps öffnen')),
       st.length ? h('button', {
@@ -162,7 +183,7 @@ export function wocheAnsicht(): Ansicht {
     if (!st.length) {
       zeitachse.append(h('li', { class: 'leer-hinweis' },
         h('p', {}, 'Noch keine Besuche geplant.'),
-        h('p', { class: 'leise klein' }, 'Auf der Karte eine Firma öffnen und „Zum Tag“ wählen, unten einen Vorschlag übernehmen oder „Tag füllen“ drücken.')));
+        h('p', { class: 'leise klein' }, 'Oben eine Firma suchen (optional mit Termin), unten einen Vorschlag übernehmen oder „Tag füllen“ drücken. Bereits eingeplante Termine bleiben beim Auffüllen fix.')));
     }
 
     z.eintraege.forEach((e, i) => {
@@ -206,11 +227,7 @@ export function wocheAnsicht(): Ansicht {
               h('button', { class: 'icon-knopf klein', 'aria-label': 'Nach unten', disabled: i === st.length - 1, onClick: () => verschieben(1) }, icon('runter')),
               h('button', {
                 class: `icon-knopf klein${besucht ? ' ok' : ''}`, 'aria-label': 'Als besucht markieren', title: 'Besucht',
-                onClick: () => {
-                  const b = new Set(crmVon(f.id).besuche ?? []);
-                  besucht ? b.delete(datum) : b.add(datum);
-                  crmSetzen(f.id, { besuche: [...b], status: status === 'offen' ? 'kontaktiert' : status });
-                },
+                onClick: () => besuchSetzen(f.id, datum, mitarbeiterId, !besucht),
               }, icon('haken')),
               h('button', { class: 'icon-knopf klein', 'aria-label': 'Entfernen', title: 'Aus Tag entfernen', onClick: () => stoppEntfernen(mitarbeiterId, datum, f.id) }, icon('kreuz'))))));
     });
@@ -223,6 +240,57 @@ export function wocheAnsicht(): Ansicht {
           h('span', { class: 'start-punkt', style: `--farbe:${m.farbe}` }, icon('pin')),
           h('div', {}, h('strong', {}, 'Rückkehr'), h('div', { class: 'leise klein' }, m.startAdresse))));
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Firmensuche
+
+  function suchTreffer(): Firma[] {
+    const woerter = sucheFeld.value.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!woerter.length || sucheFeld.value.trim().length < 2) return [];
+    const imTag = new Set(stopps().map((s) => s.firmaId));
+    const erg: { f: Firma; rang: number }[] = [];
+    for (const f of alleFirmen()) {
+      if (imTag.has(f.id)) continue;
+      const name = f.name.toLowerCase();
+      const text = `${name} ${f.ort ?? ''} ${f.plz ?? ''}`.toLowerCase();
+      if (!woerter.every((w) => text.includes(w))) continue;
+      erg.push({ f, rang: (name.startsWith(woerter[0]) ? 200 : name.includes(woerter[0]) ? 100 : 0) + f.passung });
+    }
+    return erg.sort((a, b) => b.rang - a.rang).slice(0, 8).map((x) => x.f);
+  }
+
+  function sucheZeichnen() {
+    leeren(trefferListe);
+    if (sucheFeld.value.trim().length < 2) return;
+    const treffer = suchTreffer();
+    if (!treffer.length) {
+      trefferListe.append(h('li', { class: 'leise klein' }, 'Keine Firma gefunden.'));
+      return;
+    }
+    const geplant = geplantInWoche(montag);
+    for (const f of treffer) {
+      const g = geplant.get(f.id);
+      const br = brancheVon(f.branchen[0]);
+      trefferListe.append(h('li', {},
+        h('button', { class: 'such-treffer-knopf', onClick: () => einplanen(f) },
+          h('span', { class: 'listen-punkt', style: `--farbe:${br?.farbe ?? '#64748b'}` }),
+          h('span', { class: 'vorschlag-text' },
+            h('strong', {}, f.name),
+            h('span', { class: 'leise klein' }, ' ', [f.plz, f.ort].filter(Boolean).join(' '),
+              g ? ` · schon geplant: ${wochentag(g.datum)}${g.mitarbeiter !== mitarbeiterId ? `, ${mitarbeiterVon(g.mitarbeiter).name}` : ''}` : '')),
+          icon('plus'))));
+    }
+  }
+
+  function einplanen(f: Firma) {
+    const fix = terminFeld.value || undefined;
+    stoppHinzufuegen(mitarbeiterId, datum, { firmaId: f.id, fix });
+    sucheFeld.value = '';
+    terminFeld.value = '';
+    sucheZeichnen();
+    toast(`${f.name} eingeplant${fix ? ` (Termin ${fix})` : ''}`);
+    sucheFeld.focus();
   }
 
   function kandidaten() {
@@ -291,6 +359,7 @@ export function wocheAnsicht(): Ansicht {
     kopfZeichnen();
     tageZeichnen();
     tagZeichnen();
+    sucheZeichnen();
     vorschlaegeZeichnen();
     karteZeichnen();
   }
