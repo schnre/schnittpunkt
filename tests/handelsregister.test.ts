@@ -30,6 +30,11 @@ describe('Passung', () => {
     const r = passungBerechnen({ name: 'Dupont Sàrl', zweck: 'Travaux de carrelage et pose de pierre naturelle' }, profil);
     expect(r.branchen).toEqual(expect.arrayContaining(['platten', 'naturstein']));
   });
+  it('erkennt Flachdachbauer', () => {
+    const r = passungBerechnen({ name: 'Muster AG', zweck: 'Ausführung von Flachdacharbeiten und Bauwerksabdichtungen.' }, profil);
+    expect(r.branchen[0]).toBe('flachdach');
+    expect(r.passung).toBeGreaterThanOrEqual(profil.minPassung);
+  });
   it('normalisiert Satzzeichen', () => {
     expect(normalisieren('Bohr- und Schneid-Arbeiten!')).toBe(' bohr und schneid arbeiten ');
   });

@@ -58,6 +58,8 @@ export interface Crm {
   mail?: string;
   web?: string;
   besuche?: string[]; // JJJJ-MM-TT
+  /** Wer war an welchem Tag dort: JJJJ-MM-TT -> Mitarbeiter-ID (fehlt bei älteren Einträgen) */
+  besuchtVon?: Record<string, string>;
   aktualisiert?: string;
 }
 

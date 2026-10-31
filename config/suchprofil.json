@@ -46,6 +46,13 @@
       "stichworte": ["unterlagsbod", "estrich", "bodenbel", "bodenleg", "bodenschleif", "industrieboden", "terrazzo", "parkett", "chape", "revêtement de sol"]
     },
     {
+      "id": "flachdach",
+      "name": "Flachdach & Abdichtung",
+      "farbe": "#ca8a04",
+      "gewicht": 80,
+      "stichworte": ["flachdach", "dachabdicht", "bauwerksabdicht", "abdichtung", "bitumen", "dachbegrün", "étanchéité", "etancheite", "toit plat", "toiture plate", "toitures plates", "impermeabilizz", "tetto piano", "tetti piani"]
+    },
+    {
       "id": "ofen",
       "name": "Ofen- & Cheminéebau",
       "farbe": "#b45309",
@@ -68,5 +75,5 @@
     }
   ],
   "ausschluss": ["immobilien", "treuhand", "beteiligung", "holding", "software", "informatik", "versicherung", "vermögensverwaltung", "gastronomie", "coiffeur"],
-  "zefixNamensuche": ["Platten", "Keramik", "Naturstein", "Steinmetz", "Gartenbau", "Garten", "Pflästerei", "Betonbohr", "Bohr", "Fräs", "Rückbau", "Abbruch", "Bauunternehmung", "Bau AG", "Bau GmbH", "Maurer", "Unterlagsboden", "Ofenbau", "Cheminée", "Granit", "Marmor", "Carrelage", "Paysagiste"]
+  "zefixNamensuche": ["Platten", "Keramik", "Naturstein", "Steinmetz", "Gartenbau", "Garten", "Pflästerei", "Betonbohr", "Bohr", "Fräs", "Rückbau", "Abbruch", "Bauunternehmung", "Bau AG", "Bau GmbH", "Maurer", "Unterlagsboden", "Flachdach", "Abdichtung", "Étanchéité", "Ofenbau", "Cheminée", "Granit", "Marmor", "Carrelage", "Paysagiste"]
 }
