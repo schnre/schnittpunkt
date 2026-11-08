@@ -4,6 +4,7 @@ import { indexNeuBauen } from '../daten/firmen';
 import { ortSuchen } from '../geo/suche';
 import type { Mitarbeiter } from '../typen';
 import { h, leeren } from './dom';
+import { geraet, geraetBeobachten, profil } from './geraet';
 import { icon } from './icons';
 import type { Ansicht } from './router';
 import { toast } from './toast';
@@ -35,6 +36,19 @@ function adressFeld(m: Mitarbeiter): HTMLElement {
     }, 250);
   });
   return h('div', { class: 'ort-suche statisch' }, icon('pin'), input, liste);
+}
+
+function geraetInfo(): HTMLElement {
+  const g = geraet();
+  const p = profil();
+  const typ = { telefon: 'Smartphone', tablet: 'Tablet', desktop: 'Computer' }[g.typ];
+  const klasse = { kompakt: 'kompakt', normal: 'mittel', gross: 'gross' }[g.klasse];
+  return h('div', { class: 'geraet-info' }, icon('info'),
+    h('div', {},
+      h('strong', {}, `Erkannt: ${g.name}`), g.modell && !g.name.includes(g.modell) ? h('span', { class: 'leise' }, ` (${g.modell})`) : null,
+      h('div', { class: 'leise klein' },
+        `${typ} · Bildschirm ${g.breite}×${g.hoehe} pt · ${g.dpr.toLocaleString('de-CH')}× Pixeldichte · Grösse ${klasse}`,
+        ` · Skalierung ${Math.round(p.skala * 100)} % · Karte zeichnet mit ${p.karteDpr.toLocaleString('de-CH')}×${p.cluster ? ', fasst Punkte bei kleinem Zoom zusammen' : ''}`)));
 }
 
 export function einstellungenAnsicht(): Ansicht {
@@ -110,9 +124,15 @@ export function einstellungenAnsicht(): Ansicht {
 
       h('section', { class: 'karte-block' },
         h('h2', {}, 'Darstellung'),
-        h('div', { class: 'segment' }, (['auto', 'hell', 'dunkel'] as const).map((t) =>
-          h('button', { class: `segment-knopf${e.thema === t ? ' aktiv' : ''}`, onClick: () => setze((x) => { x.thema = t; }) },
-            { auto: 'Wie System', hell: 'Hell', dunkel: 'Dunkel' }[t])))),
+        h('div', { class: 'feld-block' }, h('span', { class: 'feld-label' }, 'Farbschema'),
+          h('div', { class: 'segment' }, (['auto', 'hell', 'dunkel'] as const).map((t) =>
+            h('button', { class: `segment-knopf${e.thema === t ? ' aktiv' : ''}`, onClick: () => setze((x) => { x.thema = t; }) },
+              { auto: 'Wie System', hell: 'Hell', dunkel: 'Dunkel' }[t])))),
+        h('div', { class: 'feld-block' }, h('span', { class: 'feld-label' }, 'Schrift- und Bediengrösse'),
+          h('div', { class: 'segment' }, (['auto', 'klein', 'normal', 'gross'] as const).map((t) =>
+            h('button', { class: `segment-knopf${(e.uiGroesse ?? 'auto') === t ? ' aktiv' : ''}`, onClick: () => setze((x) => { x.uiGroesse = t; }) },
+              { auto: 'Automatisch', klein: 'Kleiner', normal: 'Normal', gross: 'Grösser' }[t])))),
+        geraetInfo()),
 
       h('section', { class: 'karte-block' },
         h('h2', {}, 'Handelsregister-Abfrage per Knopf'),
@@ -144,6 +164,12 @@ export function einstellungenAnsicht(): Ansicht {
     const a = document.activeElement as HTMLInputElement | null;
     const tippt = a && root.contains(a) && a.tagName === 'INPUT' && !['color', 'file'].includes(a.type);
     if (root.isConnected && !tippt) zeichnen();
+  });
+
+  // Modell kommt bei Android etwas später (Client Hints): Anzeige dann auffrischen
+  geraetBeobachten(() => {
+    const a = document.activeElement;
+    if (root.isConnected && !(a && root.contains(a) && a.tagName === 'INPUT')) zeichnen();
   });
 
   return { el: root, titel: 'Einstellungen', anzeigen: zeichnen };

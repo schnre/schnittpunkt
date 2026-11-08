@@ -7,6 +7,7 @@ import type { Firma, KundenStatus } from '../typen';
 import { h, leeren } from './dom';
 import { firmaDetail } from './firmaDetail';
 import { icon } from './icons';
+import { blattMachen, MOBIL } from './blatt';
 import { Karte, VORSCHAU, type Farbmodus, type Grundkarte } from './karte';
 import type { Ansicht } from './router';
 
@@ -56,6 +57,7 @@ export function karteAnsicht(): Ansicht {
   const liste = h('ul', { class: 'firmenliste', role: 'list' });
   const mehr = h('button', { class: 'knopf geist breit', hidden: true, onClick: () => { sichtbar += 200; listeZeichnen(); } });
   const treffer = h('span', { class: 'treffer' });
+  const trefferDesktop = h('span', { class: 'treffer' });
   const filterZuruecksetzen = h('button', {
     class: 'link-knopf', hidden: true,
     onClick: () => {
@@ -64,25 +66,34 @@ export function karteAnsicht(): Ansicht {
     },
   }, 'Filter zurücksetzen');
 
+  const filterAnzahl = h('span', { class: 'filter-anzahl', hidden: true });
   const demoBanner = h('div', { class: 'demo-banner', hidden: true },
     icon('info'), h('span', {}, 'Demodaten (erfundene Firmen). Die erste Handelsregister-Abfrage ersetzt sie.'),
     h('a', { href: '#/register' }, 'Abfrage'));
 
+  const griff = h('div', { class: 'blatt-griff', 'aria-hidden': 'true' }, h('span', { class: 'blatt-strich' }));
+  const griffZeile = h('button', {
+    class: 'blatt-titel', type: 'button', 'aria-label': 'Liste ein- oder ausklappen',
+    onClick: () => listenBlatt.setzen(listenBlatt.stufe() === 0 ? 1 : 0),
+  }, icon('liste'), treffer, h('span', { class: 'blatt-hinweis' }, icon('hoch')));
   const panel = h('aside', { class: 'seitenpanel', 'aria-label': 'Firmen filtern' },
+    h('div', { class: 'blatt-kopf' }, griff, griffZeile),
     h('div', { class: 'panel-kopf' },
       h('div', { class: 'suche-wrap' }, icon('suche'), suche),
       demoBanner,
       statistik,
       h('details', { class: 'filter-details', open: window.innerWidth > 900 && window.innerHeight > 1000 },
-        h('summary', {}, icon('filter'), 'Filter', filterZuruecksetzen),
+        h('summary', {}, icon('filter'), 'Filter', filterAnzahl, filterZuruecksetzen),
         h('div', { class: 'filter-gruppe' }, h('span', { class: 'filter-label' }, 'Branche'), chipsBranche),
         h('div', { class: 'filter-gruppe' }, h('span', { class: 'filter-label' }, 'Status'), chipsStatus))),
-    h('div', { class: 'liste-kopf' }, treffer),
+    h('div', { class: 'liste-kopf' }, trefferDesktop),
     h('div', { class: 'liste-scroll' }, liste, mehr),
   );
 
   // ---------- Detail
-  const detail = h('aside', { class: 'detail-panel', hidden: true, 'aria-label': 'Firmendetails' });
+  const detailInhalt = h('div', { class: 'detail-scroll' });
+  const detailGriff = h('div', { class: 'blatt-griff', 'aria-hidden': 'true' }, h('span', { class: 'blatt-strich' }));
+  const detail = h('aside', { class: 'detail-panel', hidden: true, 'aria-label': 'Firmendetails' }, detailGriff, detailInhalt);
 
   // ---------- Karte und Bedienelemente darauf
   const kartenEl = h('div', { class: 'karte', role: 'application', 'aria-label': 'Karte der Schweiz mit Firmen' });
@@ -95,6 +106,15 @@ export function karteAnsicht(): Ansicht {
       h('button', { class: `segment-knopf${m === farbmodus ? ' aktiv' : ''}`, 'data-m': m, onClick: () => { farbmodus = m; farbWahl.querySelectorAll('button').forEach((b) => b.classList.toggle('aktiv', b.dataset.m === m)); aktualisieren(false); } },
         m === 'branche' ? 'Farbe: Branche' : 'Farbe: Status')));
   const legende = h('div', { class: 'legende' });
+  const legendeMenue = h('div', { class: 'legende im-menue' });
+  const schalterGruppe = h('div', { class: 'karte-schalter-gruppe' }, grundWahl, farbWahl, legendeMenue);
+  const ebenenKnopf = h('button', {
+    class: 'icon-knopf schwebend ebenen-knopf', 'aria-label': 'Kartenoptionen', 'aria-expanded': 'false',
+    onClick: () => {
+      const offen = schalterGruppe.classList.toggle('offen');
+      ebenenKnopf.setAttribute('aria-expanded', String(offen));
+    },
+  }, icon('ebenen'));
 
   // Ortssuche (springt auf der Karte zu einem Ort)
   const ortInput = h('input', { class: 'ort-input', type: 'search', placeholder: 'Ort oder Adresse …', 'aria-label': 'Ort auf der Karte suchen' });
@@ -112,7 +132,7 @@ export function karteAnsicht(): Ansicht {
         ortListe.hidden = !t.length;
         for (const o of t) {
           ortListe.append(h('li', {}, h('button', {
-            onClick: () => { karte.map.flyTo([o.lat, o.lon], 13, { duration: 0.7 }); ortListe.hidden = true; ortInput.value = o.label; },
+            onClick: () => { karte.fliegen(o, 12); ortListe.hidden = true; ortInput.value = o.label; ortInput.blur(); },
           }, o.label)));
         }
       } catch { /* abgebrochen oder offline */ }
@@ -120,16 +140,30 @@ export function karteAnsicht(): Ansicht {
   });
   const ortSuche = h('div', { class: 'ort-suche' }, icon('pin'), ortInput, ortListe);
 
-  const panelUmschalter = h('button', {
-    class: 'knopf schwebend panel-umschalter',
-    onClick: () => root.classList.toggle('liste-offen'),
-  }, icon('liste'), h('span', {}, 'Liste'));
-
   const kartenWrap = h('div', { class: 'karte-wrap' }, kartenEl,
-    h('div', { class: 'karte-oben' }, ortSuche, h('div', { class: 'karte-schalter-gruppe' }, grundWahl, farbWahl)),
-    legende, panelUmschalter);
+    h('div', { class: 'karte-oben' }, ortSuche, ebenenKnopf, schalterGruppe),
+    legende);
 
   const root = h('div', { class: 'karte-ansicht' }, panel, kartenWrap, detail);
+
+  // ---------- Handy: Liste und Detail als ziehbare Blaetter ueber der Karte
+  const listenBlatt = blattMachen(panel, [griff, griffZeile], {
+    // eingeklappt: Griff + Suche sichtbar / halb / fast ganz
+    stufen: (h) => [Math.min(126, h * 0.3), Math.round(h * 0.52), h - 10],
+    start: 0,
+    onStufe: (i) => { if (i === 0) suche.blur(); },
+  });
+  const detailBlatt = blattMachen(detail, [detailGriff], {
+    stufen: (h) => [Math.round(h * 0.5), h - 10],
+    onZu: () => auswaehlen(undefined),
+  });
+  suche.addEventListener('focus', () => { if (listenBlatt.aktiv() && listenBlatt.stufe() < 2) listenBlatt.setzen(2); });
+  // Karte beruehren klappt Liste und Kartenmenue ein
+  kartenEl.addEventListener('pointerdown', () => {
+    if (listenBlatt.aktiv() && listenBlatt.stufe() > 0) listenBlatt.setzen(0);
+    schalterGruppe.classList.remove('offen');
+    ebenenKnopf.setAttribute('aria-expanded', 'false');
+  });
 
   function grundSetzen(g: Grundkarte) {
     karte.grundkarteSetzen(g);
@@ -163,6 +197,9 @@ export function karteAnsicht(): Ansicht {
       }, h('span', { class: 'punkt' }), STATUS[s].name, h('small', {}, String(n))));
     }
     filterZuruecksetzen.hidden = !(filter.text || filter.branchen.size || filter.status.size || filter.nurNeu);
+    const n = filter.branchen.size + filter.status.size + (filter.nurNeu ? 1 : 0);
+    filterAnzahl.hidden = !n;
+    filterAnzahl.textContent = String(n);
   }
 
   function statistikZeichnen() {
@@ -196,23 +233,26 @@ export function karteAnsicht(): Ansicht {
           h('span', { class: 'listen-meta' }, [f.plz, f.ort].filter(Boolean).join(' '), ' · ', br?.name ?? '')),
         h('span', { class: 'listen-rechts' },
           st !== 'offen' ? h('span', { class: 'status-pille', style: `--farbe:${STATUS[st].farbe}` }, STATUS[st].name) : null,
-          zentrum && karte.map.getZoom() >= 10 ? h('span', { class: 'leise klein' }, `${Math.round(strasseKm(zentrum, f))} km`) : null))));
+          zentrum && karte.zoom() >= 9 ? h('span', { class: 'leise klein' }, `${Math.round(strasseKm(zentrum, f))} km`) : null))));
     }
     const rest = aktuelleListe.length - sichtbar;
     mehr.hidden = rest <= 0;
     mehr.textContent = `Weitere ${Math.min(rest, 200)} von ${rest} anzeigen`;
-    treffer.textContent = aktuelleListe.length === alleFirmen().length
+    trefferDesktop.textContent = treffer.textContent = aktuelleListe.length === alleFirmen().length
       ? `${aktuelleListe.length.toLocaleString('de-CH')} Firmen`
       : `${aktuelleListe.length.toLocaleString('de-CH')} von ${alleFirmen().length.toLocaleString('de-CH')} Firmen`;
   }
 
   function legendeZeichnen() {
     leeren(legende);
+    leeren(legendeMenue);
     const eintraege = farbmodus === 'branche'
       ? BRANCHEN.filter((b) => alleFirmen().some((f) => f.branchen[0] === b.id)).map((b) => [b.name, b.farbe])
       : STATUS_LISTE.map((s) => [STATUS[s].name, STATUS[s].farbe]);
-    legende.append(...eintraege.map(([n, c]) => h('span', { class: 'legende-eintrag' }, h('span', { class: 'punkt', style: `background:${c}` }), n)),
-      h('span', { class: 'legende-eintrag' }, h('span', { class: 'punkt neu-ring' }), 'Neu'));
+    const bauen = () => [...eintraege.map(([n, c]) => h('span', { class: 'legende-eintrag' }, h('span', { class: 'punkt', style: `background:${c}` }), n)),
+      h('span', { class: 'legende-eintrag' }, h('span', { class: 'punkt neu-ring' }), 'Neu')];
+    legende.append(...bauen());
+    legendeMenue.append(...bauen());
   }
 
   function aktualisieren(einpassen: boolean) {
@@ -228,23 +268,30 @@ export function karteAnsicht(): Ansicht {
 
   function detailZeichnen() {
     const f = ausgewaehlt ? firmaVon(ausgewaehlt) : undefined;
-    leeren(detail);
+    leeren(detailInhalt);
     detail.hidden = !f;
     root.classList.toggle('detail-offen', !!f);
     if (!f) return;
-    detail.append(firmaDetail(f, {
+    detailInhalt.append(firmaDetail(f, {
       onSchliessen: () => auswaehlen(undefined),
       onGeplant: (m, d) => { location.hash = `#/woche?m=${m}&d=${d}`; },
     }));
   }
 
   function auswaehlen(id: string | undefined, zentrieren = false) {
+    const warOffen = !!ausgewaehlt;
     ausgewaehlt = id;
     const f = id ? firmaVon(id) : undefined;
     karte.auswaehlen(f, zentrieren);
     detailZeichnen();
     liste.querySelectorAll('.listen-firma').forEach((el, i) => el.classList.toggle('aktiv', aktuelleListe[i]?.id === id));
-    if (f) root.classList.remove('liste-offen');
+    if (f && matchMedia(MOBIL).matches) {
+      // Handy: Liste einklappen, Detail auf halber Hoehe oeffnen (Karte bleibt sichtbar)
+      if (listenBlatt.stufe() > 0) listenBlatt.setzen(0, false);
+      if (!warOffen) detailBlatt.setzen(0, false);
+      detailInhalt.scrollTop = 0;
+      if (!zentrieren) karte.schwenken(f);
+    }
     const ziel = id ? `#/karte?firma=${encodeURIComponent(id)}` : '#/karte';
     if (location.hash !== ziel) history.replaceState(null, '', ziel);
     requestAnimationFrame(() => karte.groesseAktualisieren());

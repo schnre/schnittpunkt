@@ -76,7 +76,7 @@
 
 /* ---------- Grundlagen ---------- */
 *, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; }
+html, body { margin: 0; height: 100%; overscroll-behavior: none; }
 body {
   font-family: var(--sans);
   font-size: 14px;
@@ -84,6 +84,9 @@ body {
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
   font-feature-settings: 'cv11', 'ss01';
 }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -258,7 +261,7 @@ p { margin: 0; }
 .filter-chip.neu { --chip: var(--akzent); }
 .filter-chip.neu .icon { width: 14px; height: 14px; color: var(--akzent); }
 .liste-kopf { padding: 8px 16px; font-size: 12px; color: var(--text-3); font-weight: 550; }
-.liste-scroll { overflow-y: auto; flex: 1; min-height: 0; padding: 0 8px 12px; }
+.liste-scroll { overflow-y: auto; flex: 1; min-height: 0; padding: 0 8px 12px; overscroll-behavior-y: contain; }
 .firmenliste { list-style: none; margin: 0; padding: 0; }
 .listen-firma {
   width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 0; border-radius: 10px;
@@ -273,7 +276,8 @@ p { margin: 0; }
 .listen-rechts { display: grid; justify-items: end; gap: 2px; }
 
 .karte-wrap { position: relative; min-width: 0; min-height: 0; }
-.karte { position: absolute; inset: 0; background: var(--flaeche-2); }
+/* Spezifischer als .maplibregl-map (position: relative), sonst hat die Karte keine Höhe */
+.karte-wrap > .karte { position: absolute; inset: 0; background: var(--flaeche-2); }
 .karte-oben { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; gap: 10px; align-items: flex-start; z-index: 600; pointer-events: none; }
 .karte-oben > * { pointer-events: auto; }
 .karte-schalter-gruppe { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
@@ -296,13 +300,20 @@ p { margin: 0; }
 .legende-eintrag { display: inline-flex; align-items: center; gap: 5px; }
 .legende .punkt { width: 9px; height: 9px; border: 1.5px solid #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08); }
 .legende .neu-ring { background: transparent; border: 2.5px solid #111827; width: 11px; height: 11px; }
-.panel-umschalter { display: none; }
+.blatt-kopf, .ebenen-knopf, .legende.im-menue, .detail-panel > .blatt-griff { display: none; }
+.filter-anzahl {
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--akzent); color: #fff;
+  font-size: 10.5px; font-weight: 700; display: inline-grid; place-items: center;
+}
+.geraet-info { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--flaeche-2); font-size: 13px; }
+.geraet-info > .icon { color: var(--text-3); margin-top: 1px; }
 .demo-banner { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; border-radius: 10px; background: var(--warn-weich); font-size: 12px; line-height: 1.4; }
 .demo-banner .icon { color: var(--warn); width: 15px; height: 15px; margin-top: 1px; }
 .demo-banner a { white-space: nowrap; font-weight: 650; margin-left: auto; }
 
 /* Detail-Panel */
-.detail-panel { background: var(--flaeche); border-left: 1px solid var(--rand); overflow-y: auto; z-index: 700; min-height: 0; }
+.detail-panel { background: var(--flaeche); border-left: 1px solid var(--rand); z-index: 700; min-height: 0; display: flex; flex-direction: column; }
+.detail-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; }
 .detail { display: flex; flex-direction: column; }
 .detail-kopf { position: sticky; top: 0; z-index: 2; padding: 18px 18px 14px; background: var(--flaeche); border-bottom: 1px solid var(--rand); display: grid; gap: 6px; }
 .detail-chips { display: flex; flex-wrap: wrap; gap: 5px; padding-right: 36px; }
@@ -350,18 +361,31 @@ p { margin: 0; }
 .auswahl.zeit { padding-left: 32px; }
 .zweck { font-size: 13px; color: var(--text-2); line-height: 1.55; }
 
-/* ---------- Leaflet ---------- */
-.leaflet-container { font-family: var(--sans); background: var(--flaeche-2); }
-.leaflet-control-zoom { border: 0 !important; box-shadow: var(--schatten-2) !important; border-radius: 10px !important; overflow: hidden; margin: 0 14px 22px 0 !important; }
-.leaflet-control-zoom a { background: var(--glas) !important; color: var(--text) !important; border-color: var(--rand) !important; width: 34px !important; height: 34px !important; line-height: 34px !important; }
-.leaflet-control-attribution { background: var(--glas) !important; color: var(--text-3) !important; font-size: 10px !important; border-radius: 6px 0 0 0; }
-.leaflet-control-attribution a { color: var(--text-2) !important; }
-.karten-tooltip { font-family: var(--sans); font-size: 12px; border-radius: 8px; border: 0; box-shadow: var(--schatten-2); padding: 6px 9px; background: var(--flaeche); color: var(--text); }
-.karten-tooltip::before { border-top-color: var(--flaeche) !important; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .karte[data-grund='grau'] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.8) contrast(0.9); }
+/* ---------- Karte (MapLibre) ---------- */
+.maplibregl-map { font-family: var(--sans); }
+.maplibregl-canvas { outline: none; }
+.maplibregl-ctrl-group {
+  background: var(--glas) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-radius: 12px !important; box-shadow: var(--schatten-2) !important; overflow: hidden;
 }
-:root[data-theme='dark'] .karte[data-grund='grau'] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.8) contrast(0.9); }
+.maplibregl-ctrl-group button { width: 36px; height: 36px; }
+.maplibregl-ctrl-group button + button { border-top-color: var(--rand) !important; }
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin: 0 14px 10px 0; }
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl:last-child { margin-bottom: 22px; }
+.maplibregl-ctrl-attrib { font-size: 10px; background: var(--glas) !important; color: var(--text-3); }
+.maplibregl-ctrl-attrib a { color: var(--text-2) !important; }
+.maplibregl-ctrl-attrib.maplibregl-compact { margin: 0 10px 10px 0 !important; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .maplibregl-ctrl-icon, :root:not([data-theme='light']) .maplibregl-ctrl-attrib-button { filter: invert(1) hue-rotate(180deg); }
+}
+:root[data-theme='dark'] .maplibregl-ctrl-icon, :root[data-theme='dark'] .maplibregl-ctrl-attrib-button { filter: invert(1) hue-rotate(180deg); }
+.karten-tooltip { pointer-events: none; }
+.karten-tooltip .maplibregl-popup-content {
+  font-family: var(--sans); font-size: 12px; line-height: 1.35; border-radius: 8px; box-shadow: var(--schatten-2);
+  padding: 6px 9px; background: var(--flaeche); color: var(--text);
+}
+.karten-tooltip .maplibregl-popup-tip { display: none; }
+.routen-marker { cursor: pointer; }
 .routen-marker span {
   display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
   background: var(--farbe); color: #fff; font-weight: 750; font-size: 12.5px;
@@ -528,51 +552,181 @@ p { margin: 0; }
 .toast-aktion { border: 0; background: none; color: #fca5a5; font-weight: 650; padding: 0; }
 @keyframes rein { from { opacity: 0; transform: translateY(8px); } }
 
-/* ---------- Mobil ---------- */
+/* ---------- Touch-Geräte (unabhängig von der Breite) ----------
+   --ziel und --skala setzt geraet.ts anhand des erkannten Geräts. */
+:root[data-touch] .knopf { height: calc(var(--ziel, 44px) - 4px); }
+:root[data-touch] .knopf.klein { height: calc(var(--ziel, 44px) - 10px); }
+:root[data-touch] .icon-knopf { width: calc(var(--ziel, 44px) - 4px); height: calc(var(--ziel, 44px) - 4px); }
+:root[data-touch] .icon-knopf.klein { width: calc(var(--ziel, 44px) - 10px); height: calc(var(--ziel, 44px) - 10px); }
+:root[data-touch] .suchfeld, :root[data-touch] .feld-input, :root[data-touch] .auswahl, :root[data-touch] .ort-input { height: var(--ziel, 44px); }
+/* iOS zoomt bei Eingabefeldern unter 16px beim Antippen in die Seite */
+:root[data-touch] input, :root[data-touch] select, :root[data-touch] textarea { font-size: max(16px, 1em) !important; }
+:root[data-touch] .filter-chip { height: 34px; padding: 0 12px; }
+:root[data-touch] .segment-knopf { padding: 8px 12px; }
+:root[data-touch] .listen-firma, :root[data-touch] .such-treffer-knopf, :root[data-touch] .ort-treffer button { min-height: var(--ziel, 44px); }
+:root[data-touch] .aktion { padding: 12px 4px; }
+:root[data-touch] .mini-feld { height: 34px; }
+:root[data-touch] .maplibregl-ctrl-group button { width: 44px; height: 44px; }
+:root[data-touch] .schalter input { width: 20px; height: 20px; }
+
+/* ---------- Mittelgrosse Bildschirme ---------- */
 @media (max-width: 1180px) {
   .karte-ansicht.detail-offen { grid-template-columns: 340px 1fr 380px; }
   .karte-ansicht { grid-template-columns: 340px 1fr; }
 }
+
+/* ---------- Handy und Tablet hochkant ---------- */
 @media (max-width: 900px) {
+  :root { --nav-hoehe: calc(58px * var(--skala, 1)); }
+  body { font-size: calc(14.5px * var(--skala, 1)); }
+  h1 { font-size: calc(21px * var(--skala, 1)); }
   .schale { grid-template-columns: 1fr; }
+
+  /* Navigation unten, mit Platz für Home-Indikator */
   .app-nav {
     position: fixed; left: 0; right: 0; bottom: 0; height: calc(var(--nav-hoehe) + env(safe-area-inset-bottom));
-    flex-direction: row; padding: 4px 6px env(safe-area-inset-bottom);
+    flex-direction: row; gap: 0; padding: 0 max(4px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(4px, env(safe-area-inset-left));
+    user-select: none; -webkit-user-select: none;
   }
   .marke { display: none; }
-  .nav-links { flex-direction: row; justify-content: space-around; }
-  .nav-link { flex: 1; padding: 8px 2px; font-size: 10.5px; }
-  .nav-link.aktiv::before { left: 25%; right: 25%; top: -4px; bottom: auto; width: auto; height: 3px; border-radius: 0 0 3px 3px; }
+  .nav-links { flex-direction: row; justify-content: space-around; gap: 2px; height: 100%; }
+  .nav-link { flex: 1; min-width: 0; justify-content: center; padding: 4px 2px; gap: 3px; font-size: calc(10.5px * var(--skala, 1)); background: none !important; }
+  .nav-link > span:not(.nav-badge) { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nav-link .icon { width: calc(22px * var(--skala, 1)); height: calc(22px * var(--skala, 1)); padding: 3px 14px; box-sizing: content-box; border-radius: 14px; transition: background 0.15s; }
+  .nav-link.aktiv .icon { background: rgb(255 255 255 / 0.14); }
+  .nav-link.aktiv::before { display: none; }
+  .nav-badge { top: 2px; right: calc(50% - 26px); }
   .app-inhalt { height: calc(100dvh - var(--nav-hoehe) - env(safe-area-inset-bottom)); }
-  .karte-ansicht, .karte-ansicht.detail-offen { grid-template-columns: 1fr; height: 100%; }
-  .seitenpanel {
-    position: absolute; left: 0; right: 0; bottom: 0; height: 72%; z-index: 900; border-right: 0;
-    border-radius: 18px 18px 0 0; box-shadow: var(--schatten-3); transform: translateY(102%); transition: transform 0.25s ease;
+
+  /* Karte: volle Fläche, Liste und Detail als ziehbare Blätter */
+  .karte-ansicht, .karte-ansicht.detail-offen { grid-template-columns: 1fr; height: 100%; overflow: hidden; }
+  .karte-wrap { grid-row: 1; grid-column: 1; }
+  .blatt {
+    position: absolute; left: 0; right: 0; bottom: 0; height: calc(100% - 10px); z-index: 900;
+    border: 0; border-radius: 18px 18px 0 0; background: var(--flaeche);
+    box-shadow: 0 -10px 34px -14px rgb(15 23 42 / 0.45), 0 -1px 0 var(--rand);
+    transform: translateY(calc(100% - var(--blatt-h, 126px)));
+    transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.25, 1);
+    will-change: transform; display: flex; flex-direction: column;
   }
-  .karte-ansicht.liste-offen .seitenpanel { transform: none; }
-  .panel-umschalter { display: inline-flex; position: absolute; left: 50%; transform: translateX(-50%); bottom: 18px; z-index: 650; height: 42px; border-radius: 21px; padding: 0 18px; }
-  .karte-ansicht.liste-offen .panel-umschalter { z-index: 950; bottom: calc(72% + 10px); }
+  .blatt.zieht { transition: none; }
+  .blatt .liste-scroll, .blatt .detail-scroll { padding-bottom: calc(var(--blatt-rest, 0px) + 16px); }
+  .blatt-kopf { display: block; flex: none; }
+  .blatt-griff, .detail-panel > .blatt-griff { display: flex; justify-content: center; padding: 8px 0 6px; cursor: grab; flex: none; }
+  .blatt-strich { width: 38px; height: 5px; border-radius: 3px; background: var(--rand-stark); }
+  .blatt-titel {
+    display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: none; color: var(--text);
+    padding: 0 16px 8px; font-weight: 650; font-size: 1em; text-align: left;
+  }
+  .blatt-titel .icon { color: var(--text-3); }
+  .blatt-hinweis { margin-left: auto; display: grid; transition: transform 0.25s; }
+  .seitenpanel:not([data-stufe='0']) .blatt-hinweis { transform: rotate(180deg); }
+  .seitenpanel { border-right: 0; }
+  .seitenpanel .liste-kopf { display: none; }
+  .panel-kopf { padding: 0 12px 10px; gap: 10px; }
+  .karte-ansicht.detail-offen .seitenpanel.blatt { transform: translateY(100%); }
+  .detail-panel.blatt { z-index: 1000; animation: blatt-rein 0.32s cubic-bezier(0.2, 0.9, 0.25, 1); }
+  .detail-panel .detail-kopf { padding-top: 4px; }
+  @keyframes blatt-rein { from { transform: translateY(100%); } }
+
+  .statistik { gap: 4px; }
+  .stat { padding: 6px 7px; border-radius: 9px; }
+  .stat strong { font-size: calc(15px * var(--skala, 1)); }
+  .stat span { font-size: calc(10.5px * var(--skala, 1)); }
+  /* Filter-Chips: eine Zeile, seitlich wischen statt umbrechen */
+  .chips { flex-wrap: nowrap; overflow-x: auto; margin: 0 -12px; padding: 0 12px 2px; scrollbar-width: none; scroll-padding: 12px; }
+  .chips::-webkit-scrollbar { display: none; }
+  .filter-chip { flex: none; }
+  .listen-firma { padding: 10px 8px; }
+  .listen-name { font-size: calc(14px * var(--skala, 1)); }
+  .listen-meta { font-size: calc(12.5px * var(--skala, 1)); }
+
+  .karte-oben { top: max(10px, env(safe-area-inset-top)); left: 10px; right: 10px; gap: 8px; align-items: flex-start; }
+  .ort-suche { flex: 1; width: auto; min-width: 0; }
+  .ebenen-knopf {
+    display: inline-grid; flex: none; width: var(--ziel, 44px); height: var(--ziel, 44px); border-radius: 12px;
+    background: var(--glas); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    box-shadow: var(--schatten-2); border: 1px solid var(--rand); color: var(--text);
+  }
+  .ebenen-knopf[aria-expanded='true'] { color: var(--akzent); }
+  .karte-schalter-gruppe {
+    display: none; position: absolute; top: calc(var(--ziel, 44px) + 8px); right: 0; width: min(320px, 100%);
+    flex-direction: column; align-items: stretch; gap: 10px; padding: 10px; margin: 0;
+    background: var(--flaeche); border-radius: 14px; box-shadow: var(--schatten-3); border: 1px solid var(--rand);
+  }
+  .karte-schalter-gruppe.offen { display: flex; animation: rein 0.15s ease-out; }
+  .karte-schalter-gruppe .karten-schalter { display: flex; background: var(--flaeche-2); box-shadow: none; backdrop-filter: none; }
+  .karte-schalter-gruppe .segment-knopf { flex: 1; justify-content: center; }
   .legende { display: none; }
-  .karte-oben { flex-direction: column; align-items: stretch; }
-  .ort-suche { width: 100%; }
-  .karte-schalter-gruppe { margin-left: 0; justify-content: flex-start; }
-  .detail-panel {
-    position: absolute; left: 0; right: 0; bottom: 0; top: 10%; z-index: 1000;
-    border-radius: 18px 18px 0 0; border-left: 0; box-shadow: var(--schatten-3);
-  }
-  .detail-kopf { border-radius: 18px 18px 0 0; }
+  .legende.im-menue { display: flex; position: static; max-width: none; padding: 2px 4px; background: none; box-shadow: none; backdrop-filter: none; }
+  /* Kartenknöpfe über dem eingeklappten Listenblatt */
+  .karte-ansicht .maplibregl-ctrl-bottom-right { bottom: min(126px, 30%); }
+  .karte-ansicht .maplibregl-ctrl-bottom-right .maplibregl-ctrl:last-child { margin-bottom: 10px; }
+  .karte-ansicht .maplibregl-ctrl-group:has(.maplibregl-ctrl-zoom-in) { display: none; } /* Zoomen per Fingergeste */
+
+  /* Wochenplanung */
   .woche-ansicht { height: 100%; }
-  .woche-kopf { padding: 10px 12px 6px; }
-  .tage-leiste { padding: 4px 12px 10px; grid-template-columns: repeat(5, minmax(108px, 1fr)); }
-  .woche-split { display: flex; flex-direction: column; overflow-y: auto; }
-  .woche-karte { order: -1; height: 42vh; flex: none; }
+  .woche-kopf { padding: max(8px, env(safe-area-inset-top)) 12px 6px; gap: 8px; }
+  .woche-kopf > .segment { width: 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .woche-kopf > .segment .segment-knopf { flex: 1 0 auto; justify-content: center; }
+  .woche-titel { min-width: 0; flex: 1; }
+  .woche-nav { width: 100%; }
+  .tage-leiste { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 6px; padding: 2px 12px 10px; scrollbar-width: none; }
+  .tage-leiste::-webkit-scrollbar { display: none; }
+  .tag-kachel { flex: 0 0 auto; min-width: calc(108px * var(--skala, 1)); scroll-snap-align: start; padding: 8px 10px 13px; }
+  .woche-split { display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior-y: contain; }
+  .woche-karte { order: -1; height: 36dvh; min-height: 220px; flex: none; }
   .tag-panel { overflow: visible; border-right: 0; padding: 14px 12px 30px; }
-  .karten-detail { top: auto; height: 80vh; position: fixed; left: 8px; right: 8px; bottom: calc(var(--nav-hoehe) + 8px); width: auto; }
-  .seite { padding: 18px 14px 40px; }
-  .kopf-aktionen .suche-wrap { width: 100%; }
+  .zeitachse > li { grid-template-columns: 46px 30px 1fr; gap: 0 8px; }
+  .leer-hinweis { padding-left: 54px; }
+  .karten-detail {
+    position: fixed; top: auto; left: 0; right: 0; bottom: calc(var(--nav-hoehe) + env(safe-area-inset-bottom)); width: auto;
+    max-height: 78dvh; border-radius: 18px 18px 0 0; animation: blatt-rein 0.3s cubic-bezier(0.2, 0.9, 0.25, 1);
+    overscroll-behavior-y: contain;
+  }
+
+  /* Seiten */
+  .seite { padding: max(14px, env(safe-area-inset-top)) 12px 32px; }
+  .seiten-kopf { margin-bottom: 14px; }
+  .kopf-aktionen { width: 100%; }
+  .kopf-aktionen .suche-wrap { width: auto; flex: 1; min-width: 0; }
+  .karte-block { padding: 14px; }
   .zwei-spalten, .raster-3 { grid-template-columns: 1fr; }
-  .toasts { bottom: calc(var(--nav-hoehe) + 14px); }
+  .kacheln { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .kachel { padding: 12px; }
+  .neu-liste { grid-template-columns: 1fr; }
+  .toasts { bottom: calc(var(--nav-hoehe) + env(safe-area-inset-bottom) + 14px); width: calc(100% - 24px); }
 }
+
+/* ---------- Firmentabelle auf dem Handy: Karten statt Spalten ---------- */
+@media (max-width: 700px) {
+  .tabelle-wrap { background: none; border: 0; box-shadow: none; overflow: visible; border-radius: 0; }
+  .tabelle, .tabelle tbody { display: block; }
+  .tabelle thead { display: block; position: sticky; top: 0; z-index: 2; background: var(--bg); margin: 0 -12px; padding: 0 12px; }
+  .tabelle thead tr { display: flex; gap: 6px; overflow-x: auto; padding: 6px 0 10px; scrollbar-width: none; }
+  .tabelle thead tr::-webkit-scrollbar { display: none; }
+  .tabelle th { position: static; flex: none; background: var(--flaeche); border: 1px solid var(--rand); border-radius: 16px; }
+  .tabelle th[aria-sort='ascending'], .tabelle th[aria-sort='descending'] { border-color: var(--text); color: var(--text); }
+  .th-knopf { padding: 7px 12px; }
+  .tabelle tbody { display: grid; gap: 8px; }
+  .tabelle tbody tr {
+    display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center;
+    padding: 12px 14px; background: var(--flaeche); border: 1px solid var(--rand); border-radius: 14px; box-shadow: var(--schatten-1);
+  }
+  .tabelle td { padding: 0; border: 0 !important; display: block; }
+  .tabelle tbody tr:hover td { background: none; }
+  .tabelle td:nth-child(1) { grid-column: 1 / -1; font-size: 1.05em; }
+  .tabelle td:nth-child(2) { grid-column: 1; grid-row: 2; }
+  .tabelle td:nth-child(2) .leise { display: inline; margin-left: 4px; }
+  .tabelle td:nth-child(5) { grid-column: 2; grid-row: 2; justify-self: end; }
+  .tabelle td:nth-child(3) { grid-column: 1; grid-row: 3; }
+  .tabelle td:nth-child(4) { grid-column: 2; grid-row: 3; justify-self: end; }
+  .tabelle td:nth-child(6) { grid-column: 1 / -1; grid-row: 4; font-size: 12px; color: var(--text-2); }
+  .tabelle td:nth-child(6)::before { content: 'Letzter Besuch: '; }
+  .tabelle td:nth-child(7) { display: none; }
+  .tabellen-link { display: inline; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
