@@ -9,7 +9,8 @@ Aufbau, Werkzeuge und Pipeline wie die Vorlage [schnre/software_engineering](htt
 ## Was die App kann
 
 **Karte**
-- Interaktive Karte der Schweiz (swisstopo: grau, farbig, Luftbild) mit Zoom, Ortssuche und allen potenziellen Kunden
+- Interaktive Vektorkarte der Schweiz (MapLibre GL + swisstopo: grau, farbig, Luftbild) mit stufenlosem Zoom, Ortssuche, eigenem Standort und allen potenziellen Kunden
+- Auf dem Handy: Liste und Firmendetails als ziehbare Blätter über der Karte, Punkte bei kleinem Zoom gruppiert
 - Farbe nach Branche oder Status, neue Firmen mit dunklem Ring
 - Antippen zeigt Adresse, Rechtsform, UID, Zweck, Passung und Kontakt; direkt anrufen, Navigation starten, in Google Maps öffnen, Handelsregisterauszug, Telefonnummer auf search.ch suchen
 - Filter nach Branche, Status und „Neu“, Volltextsuche (Name, Ort, PLZ, Zweck)
@@ -30,7 +31,8 @@ Aufbau, Werkzeuge und Pipeline wie die Vorlage [schnre/software_engineering](htt
 
 **Sonstiges**
 - Tabelle aller Firmen mit Sortierung und CSV-Export für Excel
-- Schnell: ca. 80 kB JavaScript beim Start (gzip), Karte zeichnet tausende Punkte auf Canvas
+- Schnell: Karte zeichnet tausende Punkte per WebGL; Vektorkacheln bleiben auf jedem Display scharf. MapLibre (~280 kB gzip) wird parallel zu den Daten geladen und offline gecacht
+- Erkennt das Gerät (iPhone-Modell über Bildschirmgrösse, Android-Modell über Client Hints) und passt Schrift, Tippflächen und Kartenauflösung an; Schriftgrösse in den Einstellungen wählbar
 - Offline-fähig und installierbar (PWA), heller und dunkler Modus, Handy und Desktop
 
 ## Erste Inbetriebnahme

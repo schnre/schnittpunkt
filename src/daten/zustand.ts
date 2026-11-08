@@ -18,6 +18,7 @@ export function standardEinstellungen(): Einstellungen {
     arbeitsende: '17:30',
     besuchsdauer: 45,
     thema: 'auto',
+    uiGroesse: 'auto',
     github: { repo: '', token: '' },
   };
 }

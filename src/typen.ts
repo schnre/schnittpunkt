@@ -91,6 +91,8 @@ export interface Einstellungen {
   arbeitsende: string;
   besuchsdauer: number;
   thema: 'auto' | 'hell' | 'dunkel';
+  /** Schrift- und Bediengrösse; "auto" richtet sich nach dem erkannten Gerät */
+  uiGroesse: 'auto' | 'klein' | 'normal' | 'gross';
   github: { repo: string; token: string };
 }
 

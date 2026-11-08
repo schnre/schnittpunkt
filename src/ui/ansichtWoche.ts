@@ -350,7 +350,7 @@ export function wocheAnsicht(): Ansicht {
     const f = id ? firmaVon(id) : undefined;
     if (f) {
       kartenDetail.append(firmaDetail(f, { onSchliessen: () => detailZeigen(undefined), onGeplant: (m, d) => { mitarbeiterId = m; datum = d; montag = montagVon(d); alles(); } }));
-      karte?.map.panTo([f.lat, f.lon]);
+      karte?.schwenken(f);
     }
     zeitachse.querySelectorAll('.stopp').forEach((el) => el.classList.remove('aktiv'));
   }

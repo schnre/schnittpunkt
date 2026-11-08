@@ -4,6 +4,7 @@ import './styles.css';
 import { dateiInfo, firmenLaden } from './daten/firmen';
 import { beobachten, zustand } from './daten/zustand';
 import { h, leeren } from './ui/dom';
+import { geraetStarten, uiGroesseSetzen } from './ui/geraet';
 import { icon, type IconName } from './ui/icons';
 import { routeLesen, type Ansicht } from './ui/router';
 
@@ -39,7 +40,11 @@ function themaAnwenden() {
 themaAnwenden();
 beobachten(themaAnwenden);
 
-// Ansichten werden erst beim ersten Aufruf geladen (eigene Chunks; Leaflet nur bei Bedarf).
+// Gerät erkennen (Modell, Grösse, Touch) und Skalierung setzen, bevor etwas gezeichnet wird
+geraetStarten(zustand().einstellungen.uiGroesse);
+beobachten(() => uiGroesseSetzen(zustand().einstellungen.uiGroesse));
+
+// Ansichten werden erst beim ersten Aufruf geladen (eigene Chunks; MapLibre nur bei Bedarf).
 const LADER: Record<string, () => Promise<Ansicht>> = {
   karte: () => import('./ui/ansichtKarte').then((m) => m.karteAnsicht()),
   woche: () => import('./ui/ansichtWoche').then((m) => m.wocheAnsicht()),
@@ -71,6 +76,9 @@ async function route() {
 }
 
 inhalt.append(h('div', { class: 'laden' }, h('div', { class: 'laden-punkt' }), 'Firmen werden geladen …'));
+
+// Karten-Code parallel zu den Firmendaten laden statt danach (spart beim Start eine Runde)
+if (['karte', 'woche'].includes(routeLesen().name)) void import('./ui/ansichtKarte').catch(() => {});
 
 firmenLaden()
   .then((d) => {

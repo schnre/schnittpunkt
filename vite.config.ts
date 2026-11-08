@@ -11,10 +11,12 @@ export default defineConfig({
     sourcemap: false,
     target: 'es2022',
     cssCodeSplit: true,
+    // MapLibre (WebGL-Karte) ist ein eigener, lange cachebarer Chunk von ~280 kB gzip
+    chunkSizeWarningLimit: 1200,
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules/leaflet')) return 'leaflet';
+          if (id.includes('node_modules/maplibre-gl')) return 'maplibre';
         },
       },
     },
